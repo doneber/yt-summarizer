@@ -1,5 +1,6 @@
 <script setup>
 import AppBarComponent from './components/AppBarComponent.vue'
+import BannerComponent from './components/BannerComponent.vue'
 import { ref } from 'vue'
 let searchInput = ref('')
 let loading = ref(false)
@@ -31,6 +32,7 @@ const getVideoId = (urlVideo) => {
 <template>
   <AppBarComponent />
   <main class="container">
+    <BannerComponent />
     <form class="searcher-form" action="">
       <input v-model="searchInput" type="search" placeholder="Paste youtube video link here" @input="search()">
     </form>
