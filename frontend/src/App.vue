@@ -1,30 +1,99 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import AppBarComponent from './components/AppBarComponent.vue'
+import { ref } from 'vue'
+let searchInput = ref('')
+let loading = ref(false)
+let videoId = ref('')
+
+const search = async () => {
+  loading.value = true
+
+  // add delay to show loading
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  videoId.value = getVideoId(searchInput.value)
+
+  loading.value = false
+}
+
+const getVideoId = (urlVideo) => {
+  try {
+    const url = new URL(urlVideo)
+    const searchParams = new URLSearchParams(url.search)
+    return searchParams.get('v') || url.pathname.split('/').pop()
+  } catch {
+    console.log('Invalid link');
+  }
+  return ''
+}
+
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <AppBarComponent />
+  <main class="container">
+    <form class="searcher-form" action="">
+      <input v-model="searchInput" type="search" placeholder="Paste youtube video link here" @input="search()">
+    </form>
+    <div class="result">
+      <div v-if="loading">
+        <a href="#" aria-busy="true">Getting data, please wait…</a>
+      </div>
+      <div v-else-if="!searchInput">
+        <p><i>Pst! Past some link</i></p>
+      </div>
+      <div v-else-if="videoId">
+        <h3 class="result-title">Resultado:</h3>
+        <div class="result-thumpnail">
+          <img :src="`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`" width="350" />
+          <img :src="`https://img.shields.io/youtube/views/${videoId}?color=%23333&label=YouTube&style=social`" />
+        </div>
+        <p>Summary should go here</p>
+      </div>
+      <div v-else>
+        <p><i>Invalid link</i></p>
+      </div>
+    </div>
+  </main>
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.result {
+  display: flex;
+  flex-direction: column;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+.result-title {
+  margin: 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 400;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+body {
+  height: 100vh;
+}
+
+main {
+  display: flex;
+  height: 80%;
+  flex-direction: column;
+  justify-content: center;
+  width: min(100%, 720px);
+}
+
+.searcher-form {
+  /* display: flex; */
+  width: min(100%, 720px);
+  margin: 0 auto;
+}
+
+.result-thumpnail {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.result-thumpnail img {
+  width: fit-content;
+  /* margin: 1rem 0; */
 }
 </style>
