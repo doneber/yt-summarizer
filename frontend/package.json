@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@picocss/pico": "^1.5.7",
     "vue": "^3.2.45"
   },
   "devDependencies": {
