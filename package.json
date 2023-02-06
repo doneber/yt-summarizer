@@ -1,0 +1,23 @@
+{
+  "name": "yt-content-generator",
+  "version": "1.0.0",
+  "description": "",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint ./backend",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "standard": "17.0.0"
+  },
+  "eslintConfig": {
+    "extends": "./node_modules/standard/eslintrc.json"
+  }
+}
