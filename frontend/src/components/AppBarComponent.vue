@@ -26,6 +26,12 @@
   color: #000;
 }
 
+nav {
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+}
+
 ul li {
   margin: 0 6px;
 }
