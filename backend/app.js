@@ -7,9 +7,14 @@ const cohere = require('cohere-ai')
 cohere.init(process.env.COHERE_API_KEY)
 app.use(cors())
 app.use(express.json())
-app.use(express.static(path.join('..', 'frontend', 'dist')))
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')))
 const getSubtitles = require('youtube-captions-scraper').getSubtitles
+
 // endpoints
+app.get('/api', (req, res) => {
+  res.status(200).json({ message: 'Welcome to the API' })
+})
+
 app.get('/api/:videoId', async (req, res) => {
   await getSubtitles({
     videoID: req.params.videoId,
@@ -29,8 +34,6 @@ app.get('/api/:videoId', async (req, res) => {
       stop_sequences: [],
       return_likelihoods: 'NONE'
     })
-    console.log(`Prediction: ${response.body.generations[0].text}`)
-
     res.status(200).json({ data: response.body.generations[0].text })
   }).catch(() => { res.status(409).json({ message: 'Not found' }) })
 })
