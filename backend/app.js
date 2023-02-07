@@ -4,7 +4,7 @@ const app = express()
 const cors = require('cors')
 
 const cohere = require('cohere-ai')
-cohere.init('gC4KtowWvUS6a7iHN9lNH1Atx7OdjYzq8KrEoFZs')
+cohere.init(process.env.COHERE_API_KEY)
 app.use(cors())
 app.use(express.json())
 app.use(express.static(path.join('..', 'frontend', 'dist')))
@@ -19,7 +19,7 @@ app.get('/api/:videoId', async (req, res) => {
     ans = ans.join(' ')
     const response = await cohere.generate({
       model: 'command-xlarge-nightly',
-      prompt: `Resume the next text:\n\n${ans}`,
+      prompt: `Summary the main idea of the following text:\n\n${ans}`,
       max_tokens: 64,
       temperature: 0.9,
       k: 0,
