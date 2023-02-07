@@ -1,9 +1,11 @@
 <template>
   <nav class="container-fluid">
     <ul>
-      <li class="logo">
-        <img src="./../assets/logo.png" alt="logo" width="55" />
-        <strong>YT Summarizer</strong>
+      <li>
+        <a href="/" class="logo">
+          <img src="./../assets/logo.png" alt="logo" width="55" />
+          <strong>YT Summarizer</strong>
+        </a>
       </li>
     </ul>
     <ul>
