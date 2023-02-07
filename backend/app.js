@@ -1,9 +1,10 @@
+const path = require('path')
 const express = require('express')
 const app = express()
 const cors = require('cors')
 app.use(cors())
 app.use(express.json())
-app.use(express.static('../frontend/dist'))
+app.use(express.static(path.join('..', 'frontend', 'dist')))
 const getSubtitles = require('youtube-captions-scraper').getSubtitles
 // endpoints
 app.get('/api/:videoId', async (req, res) => {
