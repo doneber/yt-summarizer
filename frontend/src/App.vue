@@ -6,13 +6,17 @@ import { ref } from 'vue'
 let searchInput = ref('')
 let loading = ref(false)
 let videoId = ref('')
+let summary = ref('')
 const exampleURLVideo = 'https://youtu.be/M7FIvfx5J10'
 
 const search = debounce(async () => {
     loading.value = true
-    // add delay to show loading
-    await new Promise((resolve) => setTimeout(resolve, 300))
     videoId.value = getVideoId(searchInput.value)
+    await fetch(`/api/${videoId.value}`)
+      .then(data=>data.json())
+      .then(data=>{
+        summary.value = data.data
+      })
     loading.value = false
 }, 800, true)
 
@@ -76,7 +80,8 @@ const getVideoId = (urlVideo) => {
           <img :src="`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`" width="350" />
           <img :src="`https://img.shields.io/youtube/views/${videoId}?color=%23333&label=Views&style=social`" />
         </div>
-        <p>Summary should go here</p>
+        <p>Summary:</p>
+        <p>{{ summary }}</p>
       </div>
       <div v-else>
         <p><i>Invalid link</i></p>
