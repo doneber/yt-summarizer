@@ -11,23 +11,12 @@
         "buildCommand": "npm install && npm run build",
         "startCommand": "npm start"
       }
-    },
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static",
-      "config": {
-        "distDir": "frontend/dist"
-      }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "frontend/dist/$1"
+      "dest": "backend/$1"
     }
   ]
 }
