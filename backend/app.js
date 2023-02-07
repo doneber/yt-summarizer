@@ -4,7 +4,7 @@ const app = express()
 const cors = require('cors')
 app.use(cors())
 app.use(express.json())
-app.use(express.static(path.join('..', 'frontend', 'dist')))
+app.use(express.static(path.join(__dirname,'..', 'frontend', 'dist')))
 const getSubtitles = require('youtube-captions-scraper').getSubtitles
 // endpoints
 app.get('/api/:videoId', async (req, res) => {
@@ -17,6 +17,9 @@ app.get('/api/:videoId', async (req, res) => {
     res.status(200).json({ data: ans })
   }).catch(() => { res.status(409).json({ message: 'Not found' }) })
 })
+app.get('/', (req,res) => {
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'dist','index.html'));
+});
 
 const port = 3000 || process.env.PORT
 app.listen(port, () => {
