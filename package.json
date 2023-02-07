@@ -6,6 +6,9 @@
     "backend",
     "frontend"
   ],
+  "engines": {
+    "npm": ">=7.24.2"
+  },
   "main": "index.js",
   "scripts": {
     "build": "npm run build --workspace=frontend",

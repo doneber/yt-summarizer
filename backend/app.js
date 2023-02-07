@@ -11,14 +11,14 @@ app.get('/api/:videoId', async (req, res) => {
     videoID: req.params.videoId,
     lang: 'es'
   }).then(function (captions) {
-    let ans = captions.map(caption => caption.text.replaceAll('\"/\n', ' ').replaceAll('[Música]', ''))
+    let ans = captions.map(caption => caption.text.replaceAll('"/\n', ' ').replaceAll('[Música]', ''))
     ans = ans.join(' ')
     res.status(200).json({ data: ans })
-  }).catch((err) => { res.status(409).json({ message: 'Not found' }) })
+  }).catch(() => { res.status(409).json({ message: 'Not found' }) })
 })
 
 // end scraper
-const port = 3000
+const port = 3000 || process.env.PORT
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`)
 })
