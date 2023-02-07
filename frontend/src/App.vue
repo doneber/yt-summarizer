@@ -8,7 +8,7 @@ let loading = ref(false)
 let videoId = ref('')
 let summary = ref('')
 let warningMessage = ref('')
-const exampleURLVideo = 'https://youtu.be/uyEUVgNMvGI'
+const exampleURLVideo = 'https://youtu.be/rB9ql0L0cUQ'
 
 const search = debounce(async () => {
   loading.value = true
@@ -16,6 +16,11 @@ const search = debounce(async () => {
     resetValues()
     return
   }
+  
+  videoId.value = ''
+  summary.value = ''
+  warningMessage.value = ''
+
   videoId.value = getVideoId(searchInput.value)
   await fetch(`/api/${videoId.value}`)
     .then(data => data.json())
@@ -124,7 +129,7 @@ const getVideoId = (urlVideo) => {
             <a :href="exampleURLVideo" target="_blank">
               this link</a>
             video 👉
-            <button @click="copyToClipboard()">
+            <button @click="copyToClipboard(text=exampleURLVideo)">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                 <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
