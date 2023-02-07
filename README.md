@@ -44,3 +44,7 @@ Install yt-summarizer with npm
 
 # docker 
 
+`link docker  hub: https://hub.docker.com/search?q=libiamel%2Fyt-summarize`
+
+
+![awe](https://raw.githubusercontent.com/doneber/yt-summarizer/vprod/demo-yt.gif)
