@@ -8,7 +8,7 @@ let loading = ref(false)
 let videoId = ref('')
 let summary = ref('')
 let warningMessage = ref('')
-const exampleURLVideo = 'https://youtu.be/M7FIvfx5J10'
+const exampleURLVideo = 'https://youtu.be/uyEUVgNMvGI'
 
 const search = debounce(async () => {
   loading.value = true
@@ -48,7 +48,7 @@ const pasteFromClipboard = async () => {
   }
 }
 
-const copyToClipboard = async (text = 'https://youtu.be/M7FIvfx5J10') => {
+const copyToClipboard = async (text = 'https://youtu.be/uyEUVgNMvGI') => {
   try {
     await navigator.clipboard.writeText(text)
   } catch (error) {
