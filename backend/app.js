@@ -18,7 +18,6 @@ app.get('/api/:videoId', async (req, res) => {
   }).catch(() => { res.status(409).json({ message: 'Not found' }) })
 })
 
-// end scraper
 const port = 3000 || process.env.PORT
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`)
