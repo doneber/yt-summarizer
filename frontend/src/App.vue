@@ -7,6 +7,7 @@ let searchInput = ref('')
 let loading = ref(false)
 let videoId = ref('')
 let summary = ref('')
+let warningMessage = ref('')
 const exampleURLVideo = 'https://youtu.be/M7FIvfx5J10'
 
 const search = debounce(async () => {
@@ -21,6 +22,7 @@ const search = debounce(async () => {
     .then(data => {
       summary.value = data.data
     }).catch(error => {
+      warningMessage.value = "We couldn't find a summary for this video."
       console.error(error)
     })
   loading.value = false
@@ -31,6 +33,7 @@ const resetValues = () => {
   videoId.value = ''
   summary.value = ''
   loading.value = false
+  warningMessage.value = ''
 }
 
 const pasteFromClipboard = async () => {
@@ -69,8 +72,19 @@ const getVideoId = (urlVideo) => {
   <main class="container" :style="{ 'justifyContent': summary ? 'start' : 'center' }">
     <BannerComponent v-show="!summary" />
     <form class="searcher-form" @submit.prevent="">
-      <input v-model="searchInput" type="" placeholder="Paste YouTube video Link here" @input="search()">
-      <button class="past-clipboard" @click="pasteFromClipboard()">
+      <input v-model="searchInput" type="" placeholder="Paste a YouTube Link here" @input="search()">
+      <button class="search-cleaner" v-show="searchInput" @click="resetValues()">
+        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+          <g id="SVGRepo_iconCarrier">
+            <path fill="#000000"
+              d="M764.288 214.592 512 466.88 259.712 214.592a31.936 31.936 0 0 0-45.12 45.12L466.752 512 214.528 764.224a31.936 31.936 0 1 0 45.12 45.184L512 557.184l252.288 252.288a31.936 31.936 0 0 0 45.12-45.12L557.12 512.064l252.288-252.352a31.936 31.936 0 1 0-45.12-45.184z">
+            </path>
+          </g>
+        </svg>
+      </button>
+      <button class="past-clipboard" @click="pasteFromClipboard()" v-show="!searchInput">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
           <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -86,45 +100,44 @@ const getVideoId = (urlVideo) => {
       </button>
     </form>
     <div class="result">
-      <div v-if="loading">
-        <a href="#" aria-busy="true">Getting data, please wait…</a>
-      </div>
-      <div v-else-if="!searchInput" class="suggestion-link">
-        For example copy
-        <a :href="exampleURLVideo" target="_blank">
-          this link</a>
-        video 👉
-        <button @click="copyToClipboard()">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-            <g id="SVGRepo_iconCarrier">
-              <path
-                d="M16 16V18.8C16 19.9201 16 20.4802 15.782 20.908C15.5903 21.2843 15.2843 21.5903 14.908 21.782C14.4802 22 13.9201 22 12.8 22H5.2C4.0799 22 3.51984 22 3.09202 21.782C2.71569 21.5903 2.40973 21.2843 2.21799 20.908C2 20.4802 2 19.9201 2 18.8V11.2C2 10.0799 2 9.51984 2.21799 9.09202C2.40973 8.71569 2.71569 8.40973 3.09202 8.21799C3.51984 8 4.0799 8 5.2 8H8M11.2 16H18.8C19.9201 16 20.4802 16 20.908 15.782C21.2843 15.5903 21.5903 15.2843 21.782 14.908C22 14.4802 22 13.9201 22 12.8V5.2C22 4.0799 22 3.51984 21.782 3.09202C21.5903 2.71569 21.2843 2.40973 20.908 2.21799C20.4802 2 19.9201 2 18.8 2H11.2C10.0799 2 9.51984 2 9.09202 2.21799C8.71569 2.40973 8.40973 2.71569 8.21799 3.09202C8 3.51984 8 4.07989 8 5.2V12.8C8 13.9201 8 14.4802 8.21799 14.908C8.40973 15.2843 8.71569 15.5903 9.09202 15.782C9.51984 16 10.0799 16 11.2 16Z"
-                stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-            </g>
-          </svg>
-        </button>
-      </div>
-      <div v-else-if="videoId">
-        <h3 class="result-title">Resultado:</h3>
-        <div class="result-success">
-          <div class="result-success-summary">
-            <p>Summary:</p>
-            <p>{{ summary }}</p>
-          </div>
-          <div class="result-success-preview">
-            <div>
-              <div style="position:relative;padding-top:56.25%;">
-                <iframe :src="`https://www.youtube.com/embed/${videoId}`" frameborder="0" allowfullscreen
-                  style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>
-              </div>
+      <div v-if="summary" class="result-success">
+        <div class="result-success-summary">
+          <h3>Summary:</h3>
+          <p>{{ summary }}</p>
+        </div>
+        <div class="result-success-preview">
+          <div>
+            <div style="position:relative;padding-top:56.25%;">
+              <iframe :src="`https://www.youtube.com/embed/${videoId}`" frameborder="0" allowfullscreen
+                style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>
             </div>
           </div>
         </div>
       </div>
-      <div v-else>
-        <p><i>Invalid link</i></p>
+      <div v-else class="result-unknown">
+        <a v-if="loading" href="#" aria-busy="true">Getting data, please wait…</a>
+        <div v-else>
+          <div v-show="!searchInput" class="suggestion-link">
+            For example copy
+            <a :href="exampleURLVideo" target="_blank">
+              this link</a>
+            video 👉
+            <button @click="copyToClipboard()">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M16 16V18.8C16 19.9201 16 20.4802 15.782 20.908C15.5903 21.2843 15.2843 21.5903 14.908 21.782C14.4802 22 13.9201 22 12.8 22H5.2C4.0799 22 3.51984 22 3.09202 21.782C2.71569 21.5903 2.40973 21.2843 2.21799 20.908C2 20.4802 2 19.9201 2 18.8V11.2C2 10.0799 2 9.51984 2.21799 9.09202C2.40973 8.71569 2.71569 8.40973 3.09202 8.21799C3.51984 8 4.0799 8 5.2 8H8M11.2 16H18.8C19.9201 16 20.4802 16 20.908 15.782C21.2843 15.5903 21.5903 15.2843 21.782 14.908C22 14.4802 22 13.9201 22 12.8V5.2C22 4.0799 22 3.51984 21.782 3.09202C21.5903 2.71569 21.2843 2.40973 20.908 2.21799C20.4802 2 19.9201 2 18.8 2H11.2C10.0799 2 9.51984 2 9.09202 2.21799C8.71569 2.40973 8.40973 2.71569 8.21799 3.09202C8 3.51984 8 4.07989 8 5.2V12.8C8 13.9201 8 14.4802 8.21799 14.908C8.40973 15.2843 8.71569 15.5903 9.09202 15.782C9.51984 16 10.0799 16 11.2 16Z"
+                    stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </g>
+              </svg>
+            </button>
+          </div>
+          <p v-show="searchInput && warningMessage">
+            {{ warningMessage }}
+          </p>
+        </div>
       </div>
     </div>
   </main>
@@ -136,7 +149,7 @@ main {
   flex-direction: column;
   justify-content: center;
 
-  min-height: 60vh;
+  min-height: 70vh;
   width: min(100%, 1024px);
 }
 
@@ -150,6 +163,15 @@ form.searcher-form input {
   gap: 5px;
   width: min(100%, 720px);
   margin: 0 auto;
+}
+
+.search-cleaner {
+  width: 55px;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 50%;
+  border: none;
+  padding: 8px;
 }
 
 .past-clipboard {
@@ -180,7 +202,9 @@ form.searcher-form input {
   display: flex;
   justify-content: center;
 }
-
+.result-unknown {
+  min-height: 100px;
+}
 .result-title {
   margin: 1rem 0;
   font-size: 1.3rem;
@@ -190,7 +214,8 @@ form.searcher-form input {
 .result-success {
   display: flex;
   grid-template-columns: 55% 45%;
-  gap: 1rem;
+  gap: 3rem;
+  padding: 2rem 1rem;
 }
 
 .result-success-preview {
