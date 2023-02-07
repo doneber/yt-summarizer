@@ -38,6 +38,8 @@ const resetValues = () => {
 
 const pasteFromClipboard = async () => {
   try {
+    // when user click paste from clipboard ask to able navigator clipboard
+    await navigator.permissions.query({ name: 'clipboard-read' })
     const text = await navigator.clipboard.readText()
     searchInput.value = text
     search()
