@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
+      "src": "backend/app.js",
       "use": "@vercel/node",
       "config": {
         "env": {
@@ -16,7 +16,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "backend/$1"
+      "dest": "backend/app.js"
     }
   ]
 }
