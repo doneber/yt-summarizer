@@ -1,13 +1,13 @@
 {
   "installCommand": "npm install",
-  "buildCommand": "npm run build",
+  "buildCommand": "cd frontend & npm run build",
   "builds": [
-    { "src": "frontend/**.html", "use": "@vercel/static" },
+    { "src": "frontend/dist/**", "use": "@vercel/static" },
     { "src": "*.py", "use": "@vercel/python" },
     { "src": "backend/**.js", "use": "@vercel/node" }
   ],
   "routes": [
+    { "src": "/", "dest": "/frontend/dist/**" }
     { "src": "/.*", "dest": "/backend/app.js" },
-    { "src": "/.*", "dest": "/frontend/**" }
   ]
 }
