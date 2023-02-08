@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "backend/app.js": {
+      "runtime": "@vercel/node"
+    }
+  },
   "routes": [
     {
       "src": "/api",
