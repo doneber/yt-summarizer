@@ -1,15 +1,13 @@
 {
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
   "builds": [
     {
+      "src": "frontend/dist/*",
+      "use": "@vercel/static",
       "config": {
-        "installCommand": "cd frontend & npm install",
         "buildCommand": "cd frontend & npm run build",
-        "outputDirectory": "dist"
-      },
-      "src": "frontend/dist/**",
-      "use": "@vercel/static"
+        "outputDirectory": "dist",
+        "installCommand": "cd frontend & npm install"
+      }
     },
     { "src": "*.py", "use": "@vercel/python" },
     { "src": "backend/**.js", "use": "@vercel/node" }
