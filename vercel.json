@@ -4,7 +4,7 @@
       "config": {
         "installCommand": "npm install",
         "buildCommand": "npm run build"
-      }
+      },
       "src": "frontend/dist/**",
       "use": "@vercel/static"
     },
@@ -12,7 +12,7 @@
     { "src": "backend/**.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/", "dest": "/frontend/dist/**" }
-    { "src": "/.*", "dest": "/backend/app.js" },
+    { "src": "/", "dest": "/frontend/dist/**" },
+    { "src": "/.*", "dest": "/backend/app.js" }
   ]
 }
