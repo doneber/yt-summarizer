@@ -9,7 +9,23 @@
         "installCommand": "cd frontend & npm install"
       }
     },
-    { "src": "*.py", "use": "@vercel/python" },
-    { "src": "backend/**.js", "use": "@vercel/node" }
+    {
+      "src": "*.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "backend/**.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api",
+      "dest": "backend/app.js"
+    },
+    {
+      "src": "/.*",
+      "dest": "frontend/dist"
+    }
   ]
 }
