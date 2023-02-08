@@ -3,7 +3,8 @@
     {
       "config": {
         "installCommand": "npm install",
-        "buildCommand": "npm run build"
+        "buildCommand": "npm run build",
+        "outputDirectory": "dist"
       },
       "src": "frontend/dist/**",
       "use": "@vercel/static"
