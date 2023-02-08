@@ -1,7 +1,18 @@
 {
-  "builds": [
-    { "src": "*.html", "use": "@vercel/static" },
-    { "src": "*.py", "use": "@vercel/python" },
-    { "src": "*.js", "use": "@vercel/node" }
+  "functions": {
+    "api/app.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "routes": [
+    {
+      "src": "/",
+      "dest": "frontend/dist"
+    },
+    {
+      "src": "/.*",
+      "dest": "api/app.js"
+    }
   ]
 }
