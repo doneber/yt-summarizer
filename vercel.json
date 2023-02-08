@@ -1,22 +1,7 @@
 {
-  "version": 2,
   "builds": [
-    {
-      "src": "backend/app.js",
-      "use": "@vercel/node",
-      "config": {
-        "env": {
-          "NODE_ENV": "production"
-        },
-        "buildCommand": "npm install && npm run build",
-        "startCommand": "npm start"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "backend/app.js"
-    }
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "*.py", "use": "@vercel/python" },
+    { "src": "*.js", "use": "@vercel/node" }
   ]
 }
