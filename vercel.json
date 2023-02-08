@@ -1,6 +1,6 @@
 {
   "functions": {
-    "backend/app.js": {
+    "backend/api/app.js": {
       "memory": 1024,
       "maxDuration": 10
     }
@@ -8,7 +8,7 @@
   "routes": [
     {
       "src": "/api",
-      "dest": "backend/app.js"
+      "dest": "backend/api/app.js"
     },
     {
       "src": "/.*",
