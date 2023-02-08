@@ -7,12 +7,12 @@
   },
   "routes": [
     {
-      "src": "/api",
-      "dest": "api/app.js"
+      "src": "/",
+      "dest": "frontend/dist"
     },
     {
       "src": "/.*",
-      "dest": "frontend/dist"
+      "dest": "api/app.js"
     }
   ]
 }
