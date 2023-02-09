@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/app.js": {
+    "api/app.py": {
       "memory": 1024,
       "maxDuration": 10
     }
@@ -12,7 +12,7 @@
     },
     {
       "src": "/.*",
-      "dest": "api/app.js"
+      "dest": "api/app.py"
     }
   ]
 }
