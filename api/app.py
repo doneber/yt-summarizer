@@ -5,9 +5,14 @@ import os
 import cohere
 import regex
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend/dist' ,static_url_path="/")
 DEBUG = False
 cors = CORS(app, resources={r"/api/*":{"origins":"*"}})
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
+    return app.send_static_file("index.html")
 
 @app.route('/api/', methods=['GET'])
 @cross_origin(allow_headers=['Content-Type'])
@@ -46,11 +51,9 @@ def get_video_captions(video_id):
     if(request.method == 'GET'):
       summary_text = res.generations[0].text.replace('\n', '')
       data = { "data": summary_text, "prompt": prompt }
-      print(prompt)
       return jsonify(data)
   except Exception as e:
     # respond with http code status error
-    print(e)
     return Response(e, status=409)
   
   
