@@ -1,10 +1,9 @@
 {
-  "name": "yt-content-generator",
+  "name": "yt-summarizer",
   "version": "1.0.0",
   "description": "",
   "private": true,
   "workspaces": [
-    "backend",
     "frontend"
   ],
   "engines": {
@@ -12,18 +11,9 @@
   },
   "main": "index.js",
   "scripts": {
-    "build": "npm run build --workspace=frontend",
-    "start": "npm run start --workspace=backend",
-    "dev:backend": "npm run build && npm run dev --workspace=backend",
-    "lint": "eslint ./backend ./frontend"
+    "build": "npm run build --workspace=frontend"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "standard": "17.0.0"
-  },
-  "eslintConfig": {
-    "extends": "./node_modules/standard/eslintrc.json"
-  }
+  "license": "ISC"
 }
