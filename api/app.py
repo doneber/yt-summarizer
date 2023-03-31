@@ -29,8 +29,7 @@ def get_video_captions(video_id):
     # extract with regex everything between '[' and ']' and replace with ''
     caps_joined = regex.sub(r'\[.*?\]', '', caps_joined)
 
-    # openai.api_key = os.environ["OPENAI_API_KEY"]
-    openai.api_key = "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"
+    openai.api_key = os.environ["OPENAI_API_KEY"]
     res = openai.ChatCompletion.create(
       model="gpt-3.5-turbo",
       messages = [
