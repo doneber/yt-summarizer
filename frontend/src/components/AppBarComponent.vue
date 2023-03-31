@@ -9,7 +9,6 @@
       </li>
     </ul>
     <ul>
-      <li><a href="#">About us</a></li>
       <li>
         <a href="https://github.com/doneber/yt-summarizer" target="_blank">
           <svg class="_3W--KRkiCk" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="32" height="32">

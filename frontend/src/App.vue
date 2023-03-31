@@ -7,6 +7,8 @@ let searchInput = ref('')
 let loading = ref(false)
 let videoId = ref('')
 let summary = ref('')
+let captions = ref('')
+let player = ref('')
 let warningMessage = ref('')
 const exampleURLVideo = 'https://youtu.be/rB9ql0L0cUQ'
 
@@ -16,9 +18,10 @@ const search = debounce(async () => {
     resetValues()
     return
   }
-  
+
   videoId.value = ''
   summary.value = ''
+  captions.value = ''
   warningMessage.value = ''
 
   videoId.value = getVideoId(searchInput.value)
@@ -26,6 +29,15 @@ const search = debounce(async () => {
     .then(data => data.json())
     .then(data => {
       summary.value = data.data
+      captions.value = data.captions
+    }).then(() => {
+      player.value = new YT.Player('video-player', {
+        width: '100%',
+        height: '100%',
+        videoId: videoId.value
+      })
+    }).then(() => {
+      console.log('player', player.value)
     }).catch(error => {
       warningMessage.value = "We couldn't find a summary for this video."
       console.error(error)
@@ -72,6 +84,18 @@ const getVideoId = (urlVideo) => {
   return ''
 }
 
+const formatToTime = (seconds) => {
+  // this functions format seconds to hours, minutes and seconds
+  const date = new Date(null)
+  date.setSeconds(seconds)
+  return date.toISOString().substr(11, 8)
+
+}
+
+const seekTo = (startSecond) => {
+  player.value.seekTo(parseInt(startSecond))
+}
+
 </script>
 
 <template>
@@ -107,21 +131,28 @@ const getVideoId = (urlVideo) => {
       </button>
     </form>
     <div class="result">
-      <div v-if="summary" class="result-success">
-        <div class="result-success-summary">
-          <h3>Summary:</h3>
-          <p>{{ summary }}</p>
+      <div v-show="summary" class="result-success">
+        <div class="result-success-summary auto-scroll">
+          <h3>Captions</h3>
+          <!-- iterate captions  -->
+          <p v-for="caption in captions" :key="caption" style="margin-bottom: 0;">
+            <span style="color: #3ea6ff; cursor: pointer;" @click="seekTo(caption.start)">
+              {{ formatToTime(caption.start) }}
+            </span>:
+            <span>{{ caption.text }}</span>
+          </p>
         </div>
         <div class="result-success-preview">
+          <div style="width: 100%; aspect-ratio: 16 / 9;">
+            <div id="video-player"></div>
+          </div>
           <div>
-            <div style="position:relative;padding-top:56.25%;">
-              <iframe :src="`https://www.youtube.com/embed/${videoId}`" frameborder="0" allowfullscreen
-                style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>
-            </div>
+            <h3>Summary:</h3>
+            <p class="auto-scroll">{{ summary }}</p>
           </div>
         </div>
       </div>
-      <div v-else class="result-unknown">
+      <div v-show="!summary" class="result-unknown">
         <a v-if="loading" href="#" aria-busy="true">Getting data, please wait…</a>
         <div v-else>
           <div v-show="!searchInput" class="suggestion-link">
@@ -129,7 +160,7 @@ const getVideoId = (urlVideo) => {
             <a :href="exampleURLVideo" target="_blank">
               this link</a>
             video 👉
-            <button @click="copyToClipboard(text=exampleURLVideo)">
+            <button @click="copyToClipboard(text = exampleURLVideo)">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                 <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -156,8 +187,12 @@ main {
   flex-direction: column;
   justify-content: center;
 
-  min-height: 70vh;
+  height: 80vh;
   width: min(100%, 1024px);
+}
+
+h3 {
+  margin-bottom: 1.5rem;
 }
 
 form.searcher-form input {
@@ -209,9 +244,17 @@ form.searcher-form input {
   display: flex;
   justify-content: center;
 }
+
 .result-unknown {
   min-height: 100px;
 }
+
+.auto-scroll {
+  /* add scroll if content is much large */
+  overflow-y: auto;
+  max-height: 100%;
+}
+
 .result-title {
   margin: 1rem 0;
   font-size: 1.3rem;
@@ -222,6 +265,7 @@ form.searcher-form input {
   display: flex;
   grid-template-columns: 55% 45%;
   gap: 3rem;
+  height: 85vh;
   padding: 2rem 1rem;
 }
 
@@ -233,6 +277,27 @@ form.searcher-form input {
 
 .result-success-summary {
   width: 55%;
+}
+
+.result-success-summary {
+  --sb-track-color: #eeeeee;
+  --sb-thumb-color: #b3b3b3;
+  --sb-size: 10px;
+  scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+}
+
+.result-success-summary::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+.result-success-summary::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 8px;
+}
+
+.result-success-summary::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 8px;
 }
 
 .result-success-preview {
