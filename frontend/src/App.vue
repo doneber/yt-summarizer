@@ -132,6 +132,15 @@ const seekTo = (startSecond) => {
     </form>
     <div class="result">
       <div v-show="summary" class="result-success">
+        <div class="result-success-preview">
+          <div style="width: 100%; aspect-ratio: 16 / 9;">
+            <div id="video-player"></div>
+          </div>
+          <div>
+            <h3>Summary:</h3>
+            <p class="auto-scroll">{{ summary }}</p>
+          </div>
+        </div>
         <div class="result-success-summary auto-scroll">
           <h3>Captions</h3>
           <!-- iterate captions  -->
@@ -141,15 +150,6 @@ const seekTo = (startSecond) => {
             </span>:
             <span>{{ caption.text }}</span>
           </p>
-        </div>
-        <div class="result-success-preview">
-          <div style="width: 100%; aspect-ratio: 16 / 9;">
-            <div id="video-player"></div>
-          </div>
-          <div>
-            <h3>Summary:</h3>
-            <p class="auto-scroll">{{ summary }}</p>
-          </div>
         </div>
       </div>
       <div v-show="!summary" class="result-unknown">
