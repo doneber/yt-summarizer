@@ -21,32 +21,36 @@ def welcome_api():
 
 @app.route('/api/<string:video_id>', methods=['GET'])
 @cross_origin(allow_headers=['Content-Type'])
-def get_video_captions(video_id):
+def get_video_summary(video_id):
+  captions = None
   try:
     captions = YouTubeTranscriptApi.get_transcripts([video_id], languages=['en', 'es'])
-    captions = captions[0][video_id]
-    caps_joined = ' '.join([i['text'] for i in captions]).replace('\n', ' ')
-    # extract with regex everything between '[' and ']' and replace with ''
-    caps_joined = regex.sub(r'\[.*?\]', '', caps_joined)
+  except Exception as e:
+    return Response("Captions not available for the video", status=404)
 
-    openai.api_key = os.environ["OPENAI_API_KEY"]
+  # concat and clean the captions
+  caps_joined = ' '.join([i['text'] for i in captions[0][video_id]]).replace('\n', ' ')
+  caps_joined = regex.sub(r'\[.*?\]', '', caps_joined)
+  
+  # then envarioment variable from openai
+  openai.api_key = os.environ.get('OPENAI_API_KEY')
+  summary_text = ""
+  try:
     res = openai.ChatCompletion.create(
       model="gpt-3.5-turbo",
-      messages = [
-        {
+      messages=[
+          {
             "role": "user",
-            "content" : "Resume en español el siguiente texto que fue extraido de los subtitulos de un video de YouTube: \n" + caps_joined
-        }
+            "content": "Summarize in Spanish the following text extracted of a YouTube video: \n" + caps_joined
+          }
       ]
     )
-    if(request.method == 'GET'):
-      summary_text = res.choices[0].message.content
-      data = { "data": summary_text, "captions": captions}
-      return jsonify(data)
+    summary_text = res.choices[0].text
   except Exception as e:
-    # respond with http code status error
-    return Response(e, status=409)
-  
-  
+    # return Response("OpenAI failed to generate summary", status=500)
+    print("OpenAI failed to generate summary", e)
+  data = {"data": summary_text, "captions": captions[0][video_id]}
+  return jsonify(data)
+
 if __name__ == '__main__':
     app.run(debug=DEBUG)
