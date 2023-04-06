@@ -6,14 +6,17 @@ import { ref } from 'vue'
 let searchInput = ref('')
 let loading = ref(false)
 let videoId = ref('')
+let userAPIKey = ref('')
 let summary = ref('')
 let captions = ref('')
 let player = ref('')
+let responseOk = ref('')
 let warningMessage = ref('')
 const exampleURLVideo = 'https://youtu.be/rB9ql0L0cUQ'
 
 const search = debounce(async () => {
   loading.value = true
+  console.log("loading", loading.value);
   if (!searchInput.value) {
     resetValues()
     return
@@ -26,7 +29,15 @@ const search = debounce(async () => {
 
   videoId.value = getVideoId(searchInput.value)
   await fetch(`/api/${videoId.value}`)
+    .then(response => {
+      responseOk.value = response.ok
+      return response
+    })
     .then(data => data.json())
+    .then(data => {
+      console.log(data)
+      return data
+    })
     .then(data => {
       summary.value = data.data
       captions.value = data.captions
@@ -36,13 +47,12 @@ const search = debounce(async () => {
         height: '100%',
         videoId: videoId.value
       })
-    }).then(() => {
-      console.log('player', player.value)
     }).catch(error => {
-      warningMessage.value = "We couldn't find a summary for this video."
+      warningMessage.value = "We couldn't summarize this video."
       console.error(error)
     })
   loading.value = false
+  console.log("loading", loading.value);
 }, 800, true)
 
 const resetValues = () => {
@@ -51,6 +61,7 @@ const resetValues = () => {
   summary.value = ''
   loading.value = false
   warningMessage.value = ''
+  responseOk.value = ''
 }
 
 const pasteFromClipboard = async () => {
@@ -96,12 +107,38 @@ const seekTo = (startSecond) => {
   player.value.seekTo(parseInt(startSecond))
 }
 
+const useUserAPIKey = async openaiAPIKey => {
+  console.log("captions", captions.value);
+  let capsJoined = captions.value.map(i => i.text).join(' ').replace(/\n/g, ' ');
+  capsJoined = capsJoined.replace(/\[.*?\]/g, '')
+  let res = await fetch('https://api.openai.com/v1/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + openaiAPIKey
+    },
+    body: JSON.stringify({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          "role": "user",
+          "content": "Summarize in Spanish the following text extracted of a YouTube video: \n" + capsJoined
+        }
+      ]
+    })
+  })
+    .then(response => response.json())
+    .catch(error => console.error(error));
+  summary.value = res.choices[0].text
+
+}
+
 </script>
 
 <template>
-  <AppBarComponent />
-  <main class="container" :style="{ 'justifyContent': summary ? 'start' : 'center' }">
-    <BannerComponent v-show="!summary" />
+  <AppBarComponent/>
+  <main class="container" :style="{ 'justifyContent': summary ? 'start' : 'center', 'height': responseOk? 'auto': '80vh' }">
+    <BannerComponent v-show="!responseOk" />
     <form class="searcher-form" @submit.prevent="">
       <input v-model="searchInput" type="" placeholder="Paste a YouTube Link here" @input="search()">
       <button class="search-cleaner" v-show="searchInput" @click="resetValues()">
@@ -131,28 +168,47 @@ const seekTo = (startSecond) => {
       </button>
     </form>
     <div class="result">
-      <div v-show="summary" class="result-success">
+      <div v-show="responseOk" class="result-success">
         <div class="result-success-preview">
           <div style="width: 100%; aspect-ratio: 16 / 9;">
             <div id="video-player"></div>
           </div>
           <div>
-            <h3>Summary:</h3>
-            <p class="auto-scroll">{{ summary }}</p>
+            <div v-if="summary">
+              <h3>Summary:</h3>
+              <p>{{ summary }}</p>
+            </div>
+            <div v-else>
+              <p style="margin-bottom: .5rem;">
+                <strong>Ups! We couldn't generate a summary.</strong><br>
+              </p>
+              <form @submit.prevent="">
+                <p style="margin-bottom: .5rem;">Try putting your <a href="https://platform.openai.com/account/api-keys"
+                  target="_blank">OPENAI_API_KEY</a>.</p>
+                <div style="display: flex; gap: .8rem">
+                  <input type="text" v-model="userAPIKey" placeholder="Some like 'sk-5zNDWZWHwq...'" style="margin-bottom: 0;">
+                  <button type="submit" style="width: 3.5rem;" @click="useUserAPIKey(userAPIKey)">Try</button>
+                </div>
+                <span class="suggestion-link">No data is saved</span>
+              </form>
+            </div>
+
           </div>
         </div>
-        <div class="result-success-summary auto-scroll">
-          <h3>Captions</h3>
-          <!-- iterate captions  -->
-          <p v-for="caption in captions" :key="caption" style="margin-bottom: 0;">
-            <span style="color: #3ea6ff; cursor: pointer;" @click="seekTo(caption.start)">
-              {{ formatToTime(caption.start) }}
-            </span>:
-            <span>{{ caption.text }}</span>
-          </p>
+        <div>
+          <h3 style="margin-bottom: .5rem;">Captions</h3>
+          <div class="result-success-summary auto-scroll" style="min-height: 300px;">
+            <!-- iterate captions  -->
+            <p v-for="caption in captions" :key="caption" style="margin-bottom: 0;">
+              <span style="color: #3ea6ff; cursor: pointer;" @click="seekTo(caption.start)">
+                {{ formatToTime(caption.start) }}
+              </span>:
+              <span>{{ caption.text }}</span>
+            </p>
+          </div>
         </div>
       </div>
-      <div v-show="!summary" class="result-unknown">
+      <div class="result-unknown">
         <a v-if="loading" href="#" aria-busy="true">Getting data, please wait…</a>
         <div v-else>
           <div v-show="!searchInput" class="suggestion-link">
@@ -255,6 +311,27 @@ form.searcher-form input {
   max-height: 100%;
 }
 
+.auto-scroll {
+  --sb-track-color: #eeeeee;
+  --sb-thumb-color: #b3b3b3;
+  --sb-size: 10px;
+  scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+}
+
+.auto-scroll::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+.auto-scroll::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 8px;
+}
+
+.auto-scroll::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 8px;
+}
+
 .result-title {
   margin: 1rem 0;
   font-size: 1.3rem;
@@ -276,7 +353,7 @@ form.searcher-form input {
 }
 
 .result-success-summary {
-  width: 55%;
+  /* width: 55%; */
 }
 
 .result-success-summary {
@@ -301,7 +378,8 @@ form.searcher-form input {
 }
 
 .result-success-preview {
-  width: 45%;
+  min-width: 45%;
+  width: 50%;
 }
 
 .result-success-preview img {
@@ -311,7 +389,8 @@ form.searcher-form input {
 @media (max-width: 768px) {
   .result-success {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
+    gap: .8rem;
   }
 
   .result-success-summary {
@@ -320,6 +399,9 @@ form.searcher-form input {
 
   .result-success-preview {
     width: 100%;
+  }
+  .auto-scroll {
+    max-height: 35vh;
   }
 }
 </style>
