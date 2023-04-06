@@ -5,6 +5,7 @@ import debounce from 'just-debounce-it'
 import { ref } from 'vue'
 let searchInput = ref('')
 let loading = ref(false)
+let loadingWithUserAPI = ref(false)
 let videoId = ref('')
 let userAPIKey = ref('')
 let summary = ref('')
@@ -14,9 +15,13 @@ let responseOk = ref('')
 let warningMessage = ref('')
 const exampleURLVideo = 'https://youtu.be/rB9ql0L0cUQ'
 
+function isYoutubeUrl(url) {
+  const pattern = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+$/;
+  return pattern.test(url);
+}
+
 const search = debounce(async () => {
   loading.value = true
-  console.log("loading", loading.value);
   if (!searchInput.value) {
     resetValues()
     return
@@ -27,6 +32,11 @@ const search = debounce(async () => {
   captions.value = ''
   warningMessage.value = ''
 
+  if (!isYoutubeUrl(searchInput.value)) {
+    warningMessage.value = 'Invalid link'
+    loading.value = false
+    return
+  }
   videoId.value = getVideoId(searchInput.value)
   await fetch(`/api/${videoId.value}`)
     .then(response => {
@@ -57,11 +67,16 @@ const search = debounce(async () => {
 
 const resetValues = () => {
   searchInput.value = ''
-  videoId.value = ''
-  summary.value = ''
   loading.value = false
-  warningMessage.value = ''
+  loadingWithUserAPI.value = false
+  videoId.value = ''
+  userAPIKey.value = ''
+  summary.value = ''
+  captions.value = ''
+  player.value = null
   responseOk.value = ''
+  warningMessage.value = ''
+  document.querySelector('#video-player-parent').innerHTML = '<div id="video-player"></div>'
 }
 
 const pasteFromClipboard = async () => {
@@ -86,10 +101,15 @@ const copyToClipboard = async (text = 'https://youtu.be/uyEUVgNMvGI') => {
 
 const getVideoId = (urlVideo) => {
   try {
+    // 
+    const pattern = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+$/;
+    if (!pattern.test(urlVideo))
+      throw new Error('Invalid URL')
     const url = new URL(urlVideo)
     const searchParams = new URLSearchParams(url.search)
     return searchParams.get('v') || url.pathname.split('/').pop()
   } catch {
+    warningMessage.value = 'Invalid link'
     console.log('Invalid link');
   }
   return ''
@@ -108,36 +128,41 @@ const seekTo = (startSecond) => {
 }
 
 const useUserAPIKey = async openaiAPIKey => {
-  console.log("captions", captions.value);
-  let capsJoined = captions.value.map(i => i.text).join(' ').replace(/\n/g, ' ');
+  const apiUrl = 'https://api.openai.com/v1/chat/completions'
+  let capsJoined = captions.value.map(i => i.text).join(' ').replace(/\n/g, ' ')
   capsJoined = capsJoined.replace(/\[.*?\]/g, '')
-  let res = await fetch('https://api.openai.com/v1/completions', {
+  const data = {
+    model: 'gpt-3.5-turbo',
+    messages: [
+      { role: 'user', content: "Summarize in Spanish the following text extracted of a YouTube video: \n" + capsJoined }
+    ]
+  }
+  loadingWithUserAPI.value = true
+  let res = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + openaiAPIKey
+      'Authorization': `Bearer ${openaiAPIKey}`
     },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          "role": "user",
-          "content": "Summarize in Spanish the following text extracted of a YouTube video: \n" + capsJoined
-        }
-      ]
-    })
+    body: JSON.stringify(data)
   })
     .then(response => response.json())
-    .catch(error => console.error(error));
-  summary.value = res.choices[0].text
+    .then(data => {
+      summary.value = data.choices[0].message.content
+      return data
+    })
+    .catch(error => console.error(error))
+  console.log({ res });
+  loadingWithUserAPI.value = false
 
 }
 
 </script>
 
 <template>
-  <AppBarComponent/>
-  <main class="container" :style="{ 'justifyContent': summary ? 'start' : 'center', 'height': responseOk? 'auto': '80vh' }">
+  <AppBarComponent />
+  <main class="container"
+    :style="{ 'justifyContent': summary ? 'start' : 'center', 'height': responseOk ? 'auto' : '80vh' }">
     <BannerComponent v-show="!responseOk" />
     <form class="searcher-form" @submit.prevent="">
       <input v-model="searchInput" type="" placeholder="Paste a YouTube Link here" @input="search()">
@@ -167,36 +192,53 @@ const useUserAPIKey = async openaiAPIKey => {
         </svg>
       </button>
     </form>
-    <div class="result">
+    <div>
       <div v-show="responseOk" class="result-success">
         <div class="result-success-preview">
-          <div style="width: 100%; aspect-ratio: 16 / 9;">
+          <div id="video-player-parent" style="width: 100%; aspect-ratio: 16 / 9;">
             <div id="video-player"></div>
           </div>
           <div>
             <div v-if="summary">
-              <h3>Summary:</h3>
+              <h4>Summary:</h4>
               <p>{{ summary }}</p>
             </div>
             <div v-else>
-              <p style="margin-bottom: .5rem;">
-                <strong>Ups! We couldn't generate a summary.</strong><br>
-              </p>
-              <form @submit.prevent="">
-                <p style="margin-bottom: .5rem;">Try putting your <a href="https://platform.openai.com/account/api-keys"
-                  target="_blank">OPENAI_API_KEY</a>.</p>
+              <form class="form-to-request-user-api-key" @submit.prevent="">
+                <p style="text-align: center;">
+                  <strong style="text-transform: uppercase;">⚠️ We couldn't generate a summary. ⚠️</strong><br>
+                </p>
+                <p style="margin-bottom: .5rem;">Try putting your own <a
+                    href="https://platform.openai.com/account/api-keys" target="_blank">OPENAI_API_KEY
+                    <svg style="width: 0.85rem; transform: scale(-1,1);" viewBox="0 0 24 24" fill="none"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <g id="SVGRepo_bgCarrier" stroke-width="0" class="astro-F5U63AYJ"></g>
+                      <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" class="astro-F5U63AYJ">
+                      </g>
+                      <g id="SVGRepo_iconCarrier" class="astro-F5U63AYJ">
+                        <path
+                          d="M3 3V2.5H2.5V3H3ZM12.6464 13.3536C12.8417 13.5488 13.1583 13.5488 13.3536 13.3536C13.5488 13.1583 13.5488 12.8417 13.3536 12.6464L12.6464 13.3536ZM3.5 11V3H2.5V11H3.5ZM3 3.5H11V2.5H3V3.5ZM2.64645 3.35355L12.6464 13.3536L13.3536 12.6464L3.35355 2.64645L2.64645 3.35355Z"
+                          fill="currentColor" class="astro-F5U63AYJ"></path>
+                        <path
+                          d="M4 15V15C4 16.8692 4 17.8038 4.40192 18.5C4.66523 18.9561 5.04394 19.3348 5.5 19.5981C6.19615 20 7.13077 20 9 20H14C16.8284 20 18.2426 20 19.1213 19.1213C20 18.2426 20 16.8284 20 14V9C20 7.13077 20 6.19615 19.5981 5.5C19.3348 5.04394 18.9561 4.66523 18.5 4.40192C17.8038 4 16.8692 4 15 4V4"
+                          stroke="currentColor" stroke-linecap="round" class="astro-F5U63AYJ"></path>
+                      </g>
+                    </svg>
+                  </a>.</p>
                 <div style="display: flex; gap: .8rem">
-                  <input type="text" v-model="userAPIKey" placeholder="Some like 'sk-5zNDWZWHwq...'" style="margin-bottom: 0;">
+                  <input type="text" v-model="userAPIKey" placeholder="Paste your OPENAI API KEY here"
+                    style="margin-bottom: 0;">
                   <button type="submit" style="width: 3.5rem;" @click="useUserAPIKey(userAPIKey)">Try</button>
                 </div>
-                <span class="suggestion-link">No data is saved</span>
+                <p class="suggestion-link">Data will not be stored</p>
+                <a v-if="loadingWithUserAPI" href="#" aria-busy="true">Getting data, please wait…</a>
               </form>
             </div>
 
           </div>
         </div>
         <div>
-          <h3 style="margin-bottom: .5rem;">Captions</h3>
+          <h4 style="margin-bottom: .5rem;">Captions</h4>
           <div class="result-success-summary auto-scroll" style="min-height: 300px;">
             <!-- iterate captions  -->
             <p v-for="caption in captions" :key="caption" style="margin-bottom: 0;">
@@ -228,7 +270,7 @@ const useUserAPIKey = async openaiAPIKey => {
               </svg>
             </button>
           </div>
-          <p v-show="searchInput && warningMessage">
+          <p style="color: #ff0e0e;" v-show="searchInput && warningMessage">
             {{ warningMessage }}
           </p>
         </div>
@@ -242,13 +284,13 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: center;
-
+  align-items: center;
   height: 80vh;
   width: min(100%, 1024px);
 }
 
-h3 {
-  margin-bottom: 1.5rem;
+h4 {
+  margin-bottom: 1rem;
 }
 
 form.searcher-form input {
@@ -296,11 +338,6 @@ form.searcher-form input {
   border: none;
 }
 
-.result {
-  display: flex;
-  justify-content: center;
-}
-
 .result-unknown {
   min-height: 100px;
 }
@@ -346,16 +383,6 @@ form.searcher-form input {
   padding: 2rem 1rem;
 }
 
-.result-success-preview {
-  display: flex;
-  flex-direction: column;
-  gap: .5rem;
-}
-
-.result-success-summary {
-  /* width: 55%; */
-}
-
 .result-success-summary {
   --sb-track-color: #eeeeee;
   --sb-thumb-color: #b3b3b3;
@@ -387,6 +414,10 @@ form.searcher-form input {
 }
 
 @media (max-width: 768px) {
+  .searcher-form {
+    width: 85%;
+  }
+
   .result-success {
     display: flex;
     flex-direction: column;
@@ -400,8 +431,22 @@ form.searcher-form input {
   .result-success-preview {
     width: 100%;
   }
+
   .auto-scroll {
     max-height: 35vh;
   }
 }
-</style>
+
+.form-to-request-user-api-key {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  margin-top: 1rem;
+}
+
+.form-to-request-user-api-key * {
+  margin: 0 !important;
+}</style>

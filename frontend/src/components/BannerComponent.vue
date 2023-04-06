@@ -1,7 +1,7 @@
 <template>
   <header>
     <h1>YouTube Summarizer</h1>
-    <p>Get a summary of any YouTube video in just a few seconds</p>
+    <p>Summarize a YouTube video in just a few seconds!</p>
   </header>
 </template>
 
